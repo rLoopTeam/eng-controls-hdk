@@ -1,3 +1,3 @@
 # eng-controls-hdk
 
-Some test content
+test. this is the hdk.
