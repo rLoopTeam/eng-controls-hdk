@@ -28,17 +28,14 @@ void setup()
 
 void loop() 
 {
-  for (pos1 = 1; pos1 < 180; pos1++)
-  {
-    myservo2.write(pos1);
-    myservo3.write(180-pos1);
-    delay(5);  
-  }
-  for (pos1 = 180; pos1 >= 1; pos1--)
-  {
-    myservo2.write(pos1);
-    myservo3.write(180-pos1);
-    delay(5);
-  }
-
+  myservo1.write(55);
+  myservo2.write(60);
+  myservo3.write(60);
+  myservo4.write(70);
+  delay(500);
+  myservo1.write(55);
+  myservo2.write(60);
+  myservo3.write(60);
+  myservo4.write(70);
+  delay(500);
 }
