@@ -1,6 +1,6 @@
 #include <Servo.h>
 #include <Wire.h>
-#include <Adafruit_MMA8451.h>
+//#include <Adafruit_MMA8451.h>
 #include <Adafruit_Sensor.h>
 
 #include <Wire.h>
@@ -9,8 +9,8 @@
 #include <utility/imumaths.h>
 
 #define step4 3
-#define step3 4
-#define step2 5
+#define step3 5
+#define step2 4
 #define step1 6
 
 #define pwmPin1 20
@@ -23,7 +23,7 @@ Servo myservo2;
 Servo myservo3;
 Servo myservo4;
 
-Adafruit_MMA8451 mma = Adafruit_MMA8451();
+//Adafruit_MMA8451 mma = Adafruit_MMA8451();
 #define BNO055_SAMPLERATE_DELAY_MS (20)
 
 Adafruit_BNO055 bno = Adafruit_BNO055(55);
@@ -35,7 +35,7 @@ int pos4 = 0;
 
 static double input;
 static double last_error;
-static double point = 2.0;
+static double point = 0;
 static double voltage;
 double Err = 0;
 double iErr = 0;
@@ -131,10 +131,10 @@ void displayCalStatus(void)
 
 void set_servo(double myservo1_val, double myservo2_val, double myservo3_val, double myservo4_val)
 {
-  myservo1.write(myservo1_val);
-  myservo2.write(myservo2_val);
-  myservo3.write(myservo3_val);
-  myservo4.write(myservo4_val);
+  myservo1.write(myservo1_val - 0); // 90 - 45 == motor pointing downwards (when downwards is 90 degrees)
+  myservo2.write(myservo2_val + 5);
+  myservo3.write(myservo3_val - 5);
+  myservo4.write(myservo4_val + 5);
 }
 
 
@@ -158,7 +158,8 @@ void setup() {
   myservo2.attach(step2);
   myservo3.attach(step3);
   myservo4.attach(step4);
-  set_servo(55.0, 60.0, 60.0, 70.0);
+  set_servo(90, 70, 90, 100);
+  //set_servo(90, 90, 90, 90);
   delay(1000);
 
   Serial.begin(9600);
@@ -182,7 +183,8 @@ void setup() {
 
   bno.setExtCrystalUse(true);
   delay(10);
-  setup_constants(10, 0, 0);
+  //setup_constants(0.2, 0, 0);
+  setup_constants(0.2, 0, 0);
 
 }
 void loop() {
@@ -209,12 +211,21 @@ void loop() {
   input = event.orientation.x;
   Err = point - input;
 
-  if (Err < 0)
-  {
-    Err = -1 * Err;
+  if (input > 0 && input < 182){
+    Err = -1*Err;
+    direction = 0;
+  } else if ( input > 182) {
+    Err = Err + 360;
+    //Err = Err + 360;
     direction = 1;
   }
-  else direction = 0;
+
+//  if (Err < 0)
+//  {
+//    //Err = -1 * Err;
+//    direction = 1;
+//  }
+//  else direction = 0;
     
   dErr = (Err - last_error)/timeChange;
   if (dErr < 0)
@@ -228,15 +239,17 @@ void loop() {
     iErr = -iErr;
   }
   voltage = kp * Err + ki * iErr + kd * dErr;
-  if (voltage > 15)
-    voltage = 15;
+  if (voltage > 20)
+    voltage = 20;
   if (direction)
   {
     //myservo2.write(90);
     //myservo3.write(90);
     //myservo1.write(90 - voltage);
     //myservo4.write(90 + voltage);
-    set_servo(55 - voltage, 60, 60, 70 + voltage);
+    //set_servo(90 + voltage, 90, 90, 100 - voltage);
+    //set_servo(90 + voltage, 90 + voltage, 90 - voltage, 100 - voltage);
+    set_servo(90, 90 - voltage, 90, 90 + voltage);
   }
   else if (!direction)
   {
@@ -244,7 +257,9 @@ void loop() {
     //myservo4.write(90);
     //myservo2.write(90 + voltage);
     //myservo3.write(90 - voltage);
-    set_servo(55, 60 + voltage, 60 - voltage, 70); 
+    //set_servo(90, 95 - voltage, 90 + voltage, 90); 
+    //set_servo(90 - voltage, 95 - voltage, 90 + voltage, 90 + voltage); 
+    set_servo(90 + voltage, 90, 90 - voltage, 90);
   }
   lastTime = now;
     
@@ -257,6 +272,10 @@ void loop() {
   Serial.print(event.orientation.z, 4);
   Serial.print("\tVoltage: ");
   Serial.print(voltage, 4);
+  Serial.print("\tDir: ");
+  Serial.print(direction, 4);
+  Serial.print("\tErr: ");
+  Serial.print(Err, 4);
 
   /* Optional: Display calibration status */
   displayCalStatus();
